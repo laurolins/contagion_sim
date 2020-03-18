@@ -2,6 +2,7 @@ const KEY_ENTER=13
 const KEY_BACKQUOTE=192
 
 var global = {
+	show_info: true,
 	overlay_numbers: true,
 	speed: 1,
 	running: false,
@@ -22,6 +23,9 @@ const COLOR_RECOVERED        = "#F5BB77"
 // const COLOR_HEALTHY_STATIC   = "#000088F0"
 // const COLOR_SICK_STATIC      = "#880000F0"
 // const COLOR_RECOVERED_STATIC = "#008800F0"
+
+
+const COLOR_INFO_MSG      = '#ffffff80'
 
 const COLOR_CONTROLS_BG      = '#A0A0A0'
 const COLOR_SIMULATION_BG    = '#FFFFFF'
@@ -579,6 +583,18 @@ function render_simulation(simulation)
 	}
 }
 
+function ui_show_info(flag)
+{
+	global.show_info = flag
+	if (flag) {
+		global.ui.main_div.style.visibility="hidden"
+		global.ui.msg_div.style.visibility="visible"
+	} else {
+		global.ui.main_div.style.visibility="visible"
+		global.ui.msg_div.style.visibility="hidden"
+	}
+}
+
 function update()
 {
 	if (global.simulation) {
@@ -636,10 +652,21 @@ function reset_simulation()
 	}
 	let contagion_probs = global.ui.contagion_probs_input.value.split(" ");
 	for (let i=0;i<contagion_probs.length;i++) {
-		contagion_probs[i] = parseFloat(contagion_probs[i])
-		if (isNaN(contagion_probs[i])) {
-			alert("Error parsing contagion prob. use space to separate probs")
-			return
+		let cp = contagion_probs[i]
+		let num_den = cp.split('/')
+		if (num_den.length  == 1) {
+			contagion_probs[i] = parseFloat(num_den[0])
+			if (isNaN(contagion_probs[i])) {
+				alert("Error parsing contagion prob. use space to separate probs")
+				return
+			}
+		} else if (num_den.length == 2) {
+			contagion_probs[i] = parseFloat(num_den[0]) / parseFloat(num_den[1])
+			if (isNaN(contagion_probs[i])) {
+				alert("Error parsing contagion prob. use space to separate probs")
+				return
+			}
+
 		}
 	}
 	let recovery_steps = global.ui.recovery_steps_input.value.split(" ");
@@ -657,7 +684,6 @@ function reset_simulation()
 	global.ui.play_input.value = global.running ? 'Pause' : 'Play'
 }
 
-
 function main()
 {
 	// create ui components
@@ -667,23 +693,24 @@ function main()
 	let controls_div = document.createElement('div')
 	global.ui.controls_div = controls_div
 	controls_div.id = 'controls_div'
-	controls_div.style = 'position:absolute; width:200px; height:100%; left:0; background-color: '+COLOR_CONTROLS_BG+';'
+	controls_div.style = 'position:absolute; width:225px; height:100%; left:0; background-color: '+COLOR_CONTROLS_BG+';'
 
 	let table = controls_div.appendChild(document.createElement('table'))
 	global.ui.table = table
-	table.style='font-size:10; border-spacing:0px; cellpadding:2px; width: 100%; cellspacing:2'
-
+	table.style='font-size:10; border-spacing:0px; width:100%; cellpadding:2px; cellspacing:2px;'
 	{
 		// population
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.style='width:60%'
 			let label = col.appendChild(document.createElement('label'));
 			label.innerText='Population:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let population_input = col.appendChild(document.createElement('input'));
+			col.style='width:40%'
 			population_input.type = 'text'
 			population_input.value = '100'
 			global.ui.population_input = population_input
@@ -713,13 +740,13 @@ function main()
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Contagion Probs:'
+			label.innerText='Contagion Probabilities (columns):'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let contagion_probs_input = col.appendChild(document.createElement('input'));
 			contagion_probs_input.type = 'text'
-			contagion_probs_input.value = '0.125 0.25 0.5 1.0'
+			contagion_probs_input.value = '1 1/2 1/4 1/8'
 			global.ui.contagion_probs_input = contagion_probs_input
 		}
 	}
@@ -730,7 +757,7 @@ function main()
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Recovery Steps (px):'
+			label.innerText='Recovery Steps (rows):'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
@@ -764,7 +791,7 @@ function main()
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Radius (px):'
+			label.innerText='Radius:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
@@ -781,7 +808,7 @@ function main()
 		{
 			let col = row.appendChild(document.createElement('td'));
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Panel Size(px):'
+			label.innerText='Panel Size:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
@@ -793,7 +820,7 @@ function main()
 	}
 
 	{
-		// recovery steps 
+		// speed
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
@@ -803,7 +830,7 @@ function main()
 			let speed_input = col.appendChild(document.createElement('input'));
 			speed_input.style.width = 20
 			speed_input.type = 'text'
-			speed_input.value = '10'
+			speed_input.value = '1'
 			global.ui.speed_input = speed_input
 
 			window.addEventListener("keydown", function(e) {
@@ -819,32 +846,75 @@ function main()
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
-			let reset_input = col.appendChild(document.createElement('input'));
-			reset_input.type = 'button'
-			reset_input.value = 'Reset'
-			reset_input.addEventListener('click', function() {
-				reset_simulation()
-				update()
-			});
-			let play_input = col.appendChild(document.createElement('input'));
-			play_input.type = 'button'
-			play_input.value = 'Play'
-			play_input.addEventListener('click', function() {
-				if (!global.simulation) {
-					reset_simulation()
-					global.running = true
-					global.ui.play_input.value = 'Pause'
-					update()
-				} else {
-					global.running = !global.running
-					global.ui.play_input.value = global.running ? 'Pause' : 'Play' 
-					update()
-				}
-			});
-			global.ui.play_input = play_input 
+			{
+				let btn = col.appendChild(document.createElement('input'));
+				btn.type = 'button'
+				btn.value = '1x'
+				btn.addEventListener('click', function() {
+					global.ui.speed_input.value=1
+					global.speed=1
+				});
+			}
+			{
+				let btn = col.appendChild(document.createElement('input'));
+				btn.type = 'button'
+				btn.value = '2x'
+				btn.addEventListener('click', function() {
+					global.ui.speed_input.value=2
+					global.speed=2
+				});
+			}
+			{
+				let btn = col.appendChild(document.createElement('input'));
+				btn.type = 'button'
+				btn.value = '10x'
+				btn.addEventListener('click', function() {
+					global.ui.speed_input.value=10
+					global.speed=10
+				});
+			}
 		}
 	}
 
+	{
+		// speed
+		let row = table.appendChild(document.createElement('tr'))
+		let col = row.appendChild(document.createElement('td'));
+		col.colSpan=2
+
+		let msg_input = col.appendChild(document.createElement('input'));
+		msg_input.type = 'button'
+		msg_input.value = 'Info'
+		msg_input.addEventListener('click', function() {
+			ui_show_info(!global.show_info)
+		});
+
+		let reset_input = col.appendChild(document.createElement('input'));
+		reset_input.type = 'button'
+		reset_input.value = 'Reset'
+		reset_input.addEventListener('click', function() {
+			reset_simulation()
+			update()
+		});
+
+		let play_input = col.appendChild(document.createElement('input'));
+		play_input.type = 'button'
+		play_input.value = 'Play'
+		play_input.addEventListener('click', function() {
+			ui_show_info(false)
+			if (!global.simulation) {
+				reset_simulation()
+				global.running = true
+				global.ui.play_input.value = 'Pause'
+				update()
+			} else {
+				global.running = !global.running
+				global.ui.play_input.value = global.running ? 'Pause' : 'Play' 
+				update()
+			}
+		});
+		global.ui.play_input = play_input 
+	}
 
 	let info_div = controls_div.appendChild(document.createElement('div'))
 	// info_div.style.fontClass="12 Monaco"
@@ -852,20 +922,19 @@ function main()
 	info_div.innerHTML=`<p>
 	it: iteration<br><br>
 	pi: pairwise interactions<br><br>
-	cp: contagion prob. on interaction<br><br>
+	cp: contagion prob./interaction<br><br>
 	rs: recovery steps<br><br>
 	h: healthy count<br><br>
 	r: recovered count<br><br>
 	s: sick count<br><br>
 	Ms: max sick simultaneously<br><br>
-	- Same population dynamics on all panels<br>
-	- One 'coin-flip' per pairwise interaction thresholded 
-	  by the different contagion prob. for the
-	  transmission
+	- Population movement is the same on all panels<br>
+	- Each individual moves one pixel per step<br>
+	- The same 'coin-flip' in each healthy-sick
+	  interaction is compared to the different
+	  contagion probabilities to propagate 
+	  the disease
 	</p>`
-
-
-
 
 	// var row = table.appendChild(document.createElement('tr'))
 	// var column= row.appendChild(document.createElement('td'));
@@ -885,12 +954,57 @@ function main()
 	// 	global.events.push({ 'type':EVENT_REDRAW, version:0 })
 	// });
 
+	// info div
+	let msg_div = document.createElement('div')
+	global.ui.msg_div = msg_div
+	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
+	msg_div.innerHTML= `
+	<div style="width:600px; margin-left:20px; margin-top:10px; background-color:#ffffff00;" >
+	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
+	article on 
+	<br> <br>
+		<center>
+		<a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank"
+		href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
+		<i>Why outbreaks like coronavirus spread exponentially, <br>and how to "flatten the curve"</i>
+		</a>
+		</center>
+	<br>
+
+	here is a another simulated world where we can control the <b>contagion probability</b> of the 
+	interactions between a sick person and a healthy person.
+
+	<br><br>
+
+	<center>
+	What is the effect on "flattening the curve" when the <br>contagion probability is reduced?
+	</center>
+
+	<br>
+
+	Hit <b>Play</b> and you will see people moving arround in eight panels <br>
+	(a 2-by-4 array of panels).  People move in exactly the same way on all panels.
+	The difference between the panels is that on the columns the contagion probability
+	goes down from 1 to 1/2 to 1/4 to 1/8 and on, on the rows, the recovery time is
+	shorter on the second row.
+
+	<br><br>
+
+	When no more sick people exists in any panel the simulation stops. Look at time charts and compare
+	the maximum number of simultaneously sick people in each panel (Ms value on the bottom right of each
+	panel).
+
+	<br><br>
+
+	Note that reducing the contagion probability on interactions can flatten the curve significantly.
+
+	</div> `
 
 	// main_div
 	let main_div = document.createElement('div')
 	global.ui.main_div = main_div
 	main_div.id = 'main_div'
-	main_div.style = 'position:absolute; width:calc(100% - 200px); left: 200px; height:100%; background-color: '+COLOR_SIMULATION_BG+';'
+	main_div.style = 'position:absolute; width:calc(100% - 225px); left: 225px; height:100%; background-color: '+COLOR_SIMULATION_BG+';'
 
 	let main_canvas = main_div.appendChild(document.createElement('canvas'))
 	global.ui.main_canvas = main_canvas
@@ -903,6 +1017,7 @@ function main()
 	body.style.margin='0px'
 	body.appendChild(controls_div)
 	body.appendChild(main_div)
+	body.appendChild(msg_div)
 
 	// function simulation_init(n, width, height, radius, contagion_probs, recovery_steps)
 	// global.simulation = simulation_init(100, 3, 250, 250, [1, 0.5, 0.25], [125,250])
