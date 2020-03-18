@@ -25,7 +25,7 @@ const COLOR_RECOVERED        = "#F5BB77"
 // const COLOR_RECOVERED_STATIC = "#008800F0"
 
 
-const COLOR_INFO_MSG      = '#ffffff80'
+const COLOR_INFO_MSG      = '#ffffffc0'
 
 const COLOR_CONTROLS_BG      = '#A0A0A0'
 const COLOR_SIMULATION_BG    = '#FFFFFF'
@@ -587,10 +587,10 @@ function ui_show_info(flag)
 {
 	global.show_info = flag
 	if (flag) {
-		global.ui.main_div.style.visibility="hidden"
+		// global.ui.main_div.style.visibility="hidden"
 		global.ui.msg_div.style.visibility="visible"
 	} else {
-		global.ui.main_div.style.visibility="visible"
+		// global.ui.main_div.style.visibility="visible"
 		global.ui.msg_div.style.visibility="hidden"
 	}
 }
@@ -763,7 +763,7 @@ function main()
 			let col = row.appendChild(document.createElement('td'));
 			let recovery_steps_input = col.appendChild(document.createElement('input'));
 			recovery_steps_input.type = 'text'
-			recovery_steps_input.value = '230 345'
+			recovery_steps_input.value = '345 230'
 			global.ui.recovery_steps_input = recovery_steps_input
 		}
 	}
@@ -959,7 +959,7 @@ function main()
 	global.ui.msg_div = msg_div
 	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
-	<div style="width:600px; margin-left:20px; margin-top:10px; background-color:#ffffff00;" >
+	<div style="width:600px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
 	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
@@ -985,8 +985,8 @@ function main()
 	Hit <b>Play</b> and you will see people moving arround in eight panels <br>
 	(a 2-by-4 array of panels).  People move in exactly the same way on all panels.
 	The difference between the panels is that on the columns the contagion probability
-	goes down from 1 to 1/2 to 1/4 to 1/8 and on, on the rows, the recovery time is
-	shorter on the second row.
+	per interaction goes down from 1 to 1/2 to 1/4 to 1/8 and on, on the rows, the
+	recovery time is shorter on the second row.
 
 	<br><br>
 
