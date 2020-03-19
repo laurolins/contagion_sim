@@ -986,7 +986,7 @@ function main()
 	(a 2-by-4 array of panels).  People move in exactly the same way on all panels.
 	The difference between the panels is that on the columns, from left to right, 
 	the contagion probability per interaction goes down from 1 to 1/2 to 1/4 to 1/8 
-	and on, on the rows, the recovery time is shorter on the bottom row.
+	and on the rows the recovery time is shorter on the bottom row.
 
 	<br><br>
 
