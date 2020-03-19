@@ -960,7 +960,7 @@ function main()
 	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
 	<div style="width:600px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
-	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
+	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
 		<center>
@@ -977,7 +977,7 @@ function main()
 	<br><br>
 
 	<center>
-	What is the effect on "flattening the curve" when the <br>contagion probability is reduced?
+	What is the effect on <b>flattening the curve</b> when the <br>contagion probability is reduced?
 	</center>
 
 	<br>
@@ -996,7 +996,7 @@ function main()
 
 	<br><br>
 
-	Note that reducing the contagion probability on interactions can flatten the curve significantly.
+	Note that reducing the contagion probability on interactions can flatten the curve significatively.
 
 	</div> `
 
