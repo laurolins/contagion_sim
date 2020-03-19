@@ -763,7 +763,7 @@ function main()
 			let col = row.appendChild(document.createElement('td'));
 			let recovery_steps_input = col.appendChild(document.createElement('input'));
 			recovery_steps_input.type = 'text'
-			recovery_steps_input.value = '345 230'
+			recovery_steps_input.value = '325 230'
 			global.ui.recovery_steps_input = recovery_steps_input
 		}
 	}
@@ -959,7 +959,7 @@ function main()
 	global.ui.msg_div = msg_div
 	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
-	<div style="width:600px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
+	<div style="width:700px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
 	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
@@ -982,21 +982,26 @@ function main()
 
 	<br>
 
-	Hit <b>Play</b> and you will see people moving arround in eight panels <br>
-	(a 2-by-4 array of panels).  People move in exactly the same way on all panels.
-	The difference between the panels is that on the columns, from left to right, 
-	the contagion probability per interaction goes down from 1 to 1/2 to 1/4 to 1/8 
-	and on the rows the recovery time is shorter on the bottom row.
+	Hit <b>Play</b> and you will see people (circles) moving around on eight panels (2-rows by
+	4-columns array). People's movement and interactions (intersecting circles) are exactly the same 
+	on all panels. On the columns, from left to right, the contagion probabilities
+	per interaction are 1, 1/2, 1/4 and 1/8. On the rows we vary the recovery time 
+	of a sick individual. The recovery time is defined in terms of the duration in
+	which a moving individual covers a certain distance. On the top row this distance
+	is the diagonal of the panel (longer recovery) and on the bottom row it is the side
+	of the panel (faster recovery). 
 
 	<br><br>
 
-	When no more sick people exists in any panel the simulation stops. Look at time charts and compare
+	When no more sick people exists in any panel, the simulation stops. Look at time charts and compare
 	the maximum number of simultaneously sick people in each panel (Ms value on the bottom right of each
 	panel).
 
 	<br><br>
 
-	Note that reducing the contagion probability on interactions can flatten the curve significatively.
+	Note that reducing the contagion probability on interactions can flatten the curve
+	significatively. In other words, any effective protection measure individuals take
+	during interactions can have a big effect.
 
 	</div> `
 
