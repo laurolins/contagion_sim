@@ -780,7 +780,7 @@ function main()
 			let col = row.appendChild(document.createElement('td'));
 			let social_distancing_input = col.appendChild(document.createElement('input'));
 			social_distancing_input.type = 'text'
-			social_distancing_input.value = '0.25'
+			social_distancing_input.value = '0.10'
 			global.ui.social_distancing_input = social_distancing_input
 		}
 	}
