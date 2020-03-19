@@ -993,7 +993,7 @@ function main()
 
 	<br><br>
 
-	When no more sick people exists in any panel, the simulation stops. Look at time charts and compare
+	When no more sick people exists in any panel, the simulation stops. Look at the time charts and compare
 	the maximum number of simultaneously sick people in each panel (Ms value on the bottom right of each
 	panel).
 
@@ -1001,7 +1001,7 @@ function main()
 
 	Note that reducing the contagion probability on interactions can flatten the curve
 	significatively. In other words, any effective protection measure individuals take
-	during interactions can have a big effect.
+	during interactions can have a big aggregate effect.
 
 	</div> `
 
