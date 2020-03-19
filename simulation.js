@@ -216,12 +216,22 @@ function simulation_update_interactions(simulation)
 
 }
 
-function simulation_init(population, initially_sick, radius, width, height, contagion_probs, recovery_steps, static_population_ratio)
+function simulation_init(population, initially_sick, radius, width, height, contagion_probs, recovery_widths, static_population_ratio)
 {
-	let m = contagion_probs.length * recovery_steps.length
+
+	let steps_to_px = 2
+	let speed_unit_in_px = 1.0 / steps_to_px
+	let rs = []
+	for (let i=0;i<recovery_widths.length;i++) {
+		rs.push(Math.round((recovery_widths[i] * width)/speed_unit_in_px))
+	}
+
+	let m = contagion_probs.length * recovery_widths.length
 	let sim_area_margin = radius + 4
 	let simulation = {
 		n:      population, // population size
+		steps_to_px: steps_to_px,
+		speed_unit_in_px: speed_unit_in_px,
 		initially_sick: initially_sick,
 		sim_area: [sim_area_margin, sim_area_margin, width, height],
 		width:  width + 2*sim_area_margin,
@@ -234,7 +244,7 @@ function simulation_init(population, initially_sick, radius, width, height, cont
 		subjects: [],
 		m: m,
 		contagion_probs: contagion_probs,
-		recovery_steps: recovery_steps,
+		recovery_steps: rs,
 		max_sick: new Array(m).fill(0),
 		done: false,
 		history: [],
@@ -251,8 +261,8 @@ function simulation_init(population, initially_sick, radius, width, height, cont
 		let vy = 0.0
 		if (i < mobile_subjects) { 
 			let theta = Math.random() * Math.PI * 2
-			vx = Math.cos(theta)
-			vy = Math.sin(theta)
+			vx = speed_unit_in_px * Math.cos(theta)
+			vy = speed_unit_in_px * Math.sin(theta)
 		}
 
 		health_status = (i < simulation.initially_sick) ? 1 :  0
@@ -275,15 +285,15 @@ function simulation_init(population, initially_sick, radius, width, height, cont
 
 }
 
-function simulation_move_subjects(simulation)
+function simulation_move_subjects(simulation, weight)
 {
 	// simply move the subject around
 	for (let i=0;i<simulation.n;i++) {
 
 		let subject = simulation.subjects[i]
 
-		subject.px += subject.vx
-		subject.py += subject.vy
+		subject.px += weight * subject.vx
+		subject.py += weight * subject.vy
 
 		let sim_area = simulation.sim_area
 		let x0 = sim_area[0]
@@ -309,11 +319,19 @@ function simulation_move_subjects(simulation)
 	}
 }
 
-function simulation_step(simulation)
+function simulation_step(simulation, no_steps)
 {
-	simulation_move_subjects(simulation)
-	simulation.iteration++
+	// how many pixels
+	let q = Math.floor(no_steps/simulation.steps_to_px)
+	let r = no_steps % simulation.steps_to_px
+	for (let i=0;i<q;i++) {
+		simulation_move_subjects(simulation, simulation.steps_to_px)
+		simulation_update_interactions(simulation)
+		simulation.iteration += simulation.steps_to_px
+	}
+	simulation_move_subjects(simulation, r)
 	simulation_update_interactions(simulation)
+	simulation.iteration += r
 }
 
 function render_simulation(simulation)
@@ -605,10 +623,8 @@ function update()
 	}
 
 	if (global.simulation && global.running) {
-		for (let i=0;i<global.speed;i++) {
-			simulation_step(global.simulation)
-		}
-		setTimeout(update, 16)
+		simulation_step(global.simulation, global.speed)
+		setTimeout(update, 30)
 	}
 }
 
@@ -671,7 +687,7 @@ function reset_simulation()
 	}
 	let recovery_steps = global.ui.recovery_steps_input.value.split(" ");
 	for (let i=0;i<recovery_steps.length;i++) {
-		recovery_steps[i] = parseInt(recovery_steps[i])
+		recovery_steps[i] = parseFloat(recovery_steps[i])
 		if (isNaN(recovery_steps[i])) {
 			alert("Error parsing recovery steps. use space to separate recov. steps")
 			return
@@ -684,8 +700,162 @@ function reset_simulation()
 	global.ui.play_input.value = global.running ? 'Pause' : 'Play'
 }
 
+// input {
+//     -webkit-writing-mode: horizontal-tb !important;
+//     text-rendering: auto;
+//     color: -internal-light-dark-color(black, white);
+//     letter-spacing: normal;
+//     word-spacing: normal;
+//     text-transform: none;
+//     text-indent: 0px;
+//     text-shadow: none;
+//     display: inline-block;
+//     text-align: start;
+//     -webkit-appearance: textfield;
+//     background-color: -internal-light-dark-color(white, black);
+//     -webkit-rtl-ordering: logical;
+//     cursor: text;
+//     margin: 0em;
+//     font: 400 11px system-ui;
+//     padding: 1px;
+//     border-width: 2px;
+//     border-style: inset;
+//     border-color: initial;
+//     border-image: initial;
+// }
+
+
 function main()
 {
+	var sheet = document.createElement('style')
+	sheet.innerHTML = `
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video, input {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: Helvetica;
+    font-family: Sans-Serif;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+
+// * {
+// 	margin: 0;
+// 	padding: 0;
+// 	border: 0;
+// 	font-size: 12pt;
+//     	font-family: sans-serif;
+// 	list-style: none;
+// }
+
+table {
+	border-collapse: collapse;
+}
+
+input[type="text"]
+{
+    border-width:2px;  
+    border-style:inset;
+    width: 100%;
+    padding: 2px;
+    box-sizing: border-box;
+    // color: -internal-light-dark-color(black, white);
+    // letter-spacing: normal;
+    // word-spacing: normal;
+    // text-transform: none;
+    // text-indent: 0px;
+    // text-shadow: none;
+    // -moz-box-sizing: border-box;
+    // -webkit-box-sizing: border-box;
+}
+
+input[type="button"]
+{
+    border-radius: 3px;
+    border-style:outset;
+    padding: 3px;
+    padding-left: 6px;
+    padding-right: 6px;
+    margin: 2px;
+    box-sizing: border-box;
+
+// 	-moz-appearance: push-button;
+// 	-webkit-appearance: push-button;
+// 	user-select: none;
+// 	white-space: pre;
+// 	align-items: flex-start;
+// 	text-align: center;
+// 	cursor: default;
+// 	color: buttontext;
+// 	background-color: buttonface;
+// 	box-sizing: border-box;
+// 	padding: 1px 7px 2px;
+// 	border-width: 1px;
+// 	border-style: solid;
+// 	border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
+// 	border-image: initial;
+
+}
+
+a {
+	color:#000088;
+	vlink:#000088;
+	alink:#000088;
+	text-decoration:none;
+}
+
+td, th {
+	border: 0px solid #aaaaaa;
+    	padding: 3px;
+}
+
+.table_label {
+	width:45%;
+}
+
+.table_input {
+	width:55%;
+	vertical-align: baseline;
+}
+`
+	document.body.appendChild(sheet)
+
 	// create ui components
 	let global = window.global
 
@@ -697,20 +867,20 @@ function main()
 
 	let table = controls_div.appendChild(document.createElement('table'))
 	global.ui.table = table
-	table.style='font-size:10; border-spacing:0px; width:100%; cellpadding:2px; cellspacing:2px;'
+	table.style='border-spacing:0px; width:100%;' //  cellpadding:2px; cellspacing:2px;'
 	{
 		// population
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
-			col.style='width:60%'
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Population:'
+			label.innerHTML='Population:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let population_input = col.appendChild(document.createElement('input'));
-			col.style='width:40%'
 			population_input.type = 'text'
 			population_input.value = '100'
 			global.ui.population_input = population_input
@@ -722,11 +892,13 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Initially Sick:'
+			label.innerHTML='Initially Sick:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let initially_sick_input = col.appendChild(document.createElement('input'));
 			initially_sick_input.type = 'text'
 			initially_sick_input.value = '1'
@@ -739,11 +911,13 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Contagion Probabilities (columns):'
+			label.innerHTML='Contagion<br>Probabilities<br>(columns):'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let contagion_probs_input = col.appendChild(document.createElement('input'));
 			contagion_probs_input.type = 'text'
 			contagion_probs_input.value = '1 1/2 1/4 1/8'
@@ -756,14 +930,16 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Recovery Steps (rows):'
+			label.innerHTML='Recovery<br>Distance (rows):'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let recovery_steps_input = col.appendChild(document.createElement('input'));
 			recovery_steps_input.type = 'text'
-			recovery_steps_input.value = '325 230'
+			recovery_steps_input.value = '1.4142 1'
 			global.ui.recovery_steps_input = recovery_steps_input
 		}
 	}
@@ -773,11 +949,13 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
-			label.innerText='Social Distancing:'
+			label.innerHTML='Social<br>Distancing:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let social_distancing_input = col.appendChild(document.createElement('input'));
 			social_distancing_input.type = 'text'
 			social_distancing_input.value = '0.10'
@@ -790,11 +968,13 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
 			label.innerText='Radius:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let radius_input = col.appendChild(document.createElement('input'));
 			radius_input.type = 'text'
 			radius_input.value = '3'
@@ -807,11 +987,13 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
 			label.innerText='Panel Size:'
 		}
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 			let panel_size_input = col.appendChild(document.createElement('input'));
 			panel_size_input.type = 'text'
 			panel_size_input.value = '230'
@@ -824,15 +1006,18 @@ function main()
 		let row = table.appendChild(document.createElement('tr'))
 		{
 			let col = row.appendChild(document.createElement('td'));
+			col.className="table_label";
 			let label = col.appendChild(document.createElement('label'));
 			label.innerText='Speed:'
-			label.style.marginRight='3'
-			let speed_input = col.appendChild(document.createElement('input'));
-			speed_input.style.width = 20
-			speed_input.type = 'text'
-			speed_input.value = '1'
-			global.ui.speed_input = speed_input
+		}
+		{
+			let col = row.appendChild(document.createElement('td'));
+			col.className="table_input";
 
+			let speed_input = col.appendChild(document.createElement('input'));
+			speed_input.type = 'text'
+			speed_input.value = '2'
+			global.ui.speed_input = speed_input
 			window.addEventListener("keydown", function(e) {
 				if (e.keyCode === KEY_ENTER) {
 					if (document.activeElement == global.ui.speed_input) {
@@ -844,47 +1029,81 @@ function main()
 				}
 			})
 		}
+	}
+	{
+		// speed
+		let row = table.appendChild(document.createElement('tr'))
+		let col = row.appendChild(document.createElement('td'));
+		col.colSpan=2
+		col.style='text-align:center'
 		{
-			let col = row.appendChild(document.createElement('td'));
-			{
-				let btn = col.appendChild(document.createElement('input'));
-				btn.type = 'button'
-				btn.value = '1x'
-				btn.addEventListener('click', function() {
-					global.ui.speed_input.value=1
-					global.speed=1
-				});
-			}
-			{
-				let btn = col.appendChild(document.createElement('input'));
-				btn.type = 'button'
-				btn.value = '2x'
-				btn.addEventListener('click', function() {
-					global.ui.speed_input.value=2
-					global.speed=2
-				});
-			}
-			{
-				let btn = col.appendChild(document.createElement('input'));
-				btn.type = 'button'
-				btn.value = '10x'
-				btn.addEventListener('click', function() {
-					global.ui.speed_input.value=10
-					global.speed=10
-				});
-			}
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '1x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=1
+				global.speed=1
+			});
+		}
+		{
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '2x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=2
+				global.speed=2
+			});
+		}
+		{
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '4x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=4
+				global.speed=4
+			});
+		}
+		{
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '8x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=8
+				global.speed=8
+			});
+		}
+		{
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '16x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=16
+				global.speed=16
+			});
+		}
+		{
+			let btn = col.appendChild(document.createElement('input'));
+			btn.type = 'button'
+			btn.value = '32x'
+			btn.addEventListener('click', function() {
+				global.ui.speed_input.value=32
+				global.speed=32
+			});
 		}
 	}
 
 	{
 		// speed
 		let row = table.appendChild(document.createElement('tr'))
+		row.style='background-color:#666666; height:50px'
 		let col = row.appendChild(document.createElement('td'));
 		col.colSpan=2
+		col.style='text-align:center; vertical-align: middle;'
 
 		let msg_input = col.appendChild(document.createElement('input'));
 		msg_input.type = 'button'
 		msg_input.value = 'Info'
+		msg_input.style.width="28%"
 		msg_input.addEventListener('click', function() {
 			ui_show_info(!global.show_info)
 		});
@@ -892,6 +1111,7 @@ function main()
 		let reset_input = col.appendChild(document.createElement('input'));
 		reset_input.type = 'button'
 		reset_input.value = 'Reset'
+		reset_input.style.width="28%"
 		reset_input.addEventListener('click', function() {
 			reset_simulation()
 			update()
@@ -900,6 +1120,7 @@ function main()
 		let play_input = col.appendChild(document.createElement('input'));
 		play_input.type = 'button'
 		play_input.value = 'Play'
+		play_input.style.width="28%"
 		play_input.addEventListener('click', function() {
 			ui_show_info(false)
 			if (!global.simulation) {
@@ -918,24 +1139,25 @@ function main()
 
 	let info_div = controls_div.appendChild(document.createElement('div'))
 	// info_div.style.fontClass="12 Monaco"
-	info_div.style = "padding: 5px"
+	info_div.style = "padding: 5px; line-height: 1.25;"
 	info_div.innerHTML=`<p>
-	it: iteration<br><br>
-	pi: pairwise interactions<br><br>
-	cp: contagion prob./interaction<br><br>
-	rs: recovery steps<br><br>
-	h: healthy count<br><br>
-	r: recovered count<br><br>
-	s: sick count<br><br>
-	Ms: max sick simultaneously<br><br>
-	- Population movement is the same on all panels<br>
-	- Each individual moves one pixel per step<br>
-	- The same 'coin-flip' in each healthy-sick
-	  interaction is compared to the different
-	  contagion probabilities to propagate 
-	  the disease
+	it: iteration<br>
+	pi: pairwise interactions<br>
+	cp: contagion prob./interaction<br>
+	rs: recovery steps<br>
+	h: healthy count<br>
+	r: recovered count<br>
+	s: sick count<br>
+	Ms: max sick simultaneously<br>
+	<br>
+	<div style="text-align:center"><a style="width:100%; text-align:center" href="https://github.com/laurolins/contagion_sim" target="_blank">Source Code</a></div>
 	</p>`
 
+	// <br>
+	// - The same 'coin-flip' in each healthy-sick
+	//   interaction is compared to the different
+	//   contagion probabilities to define when
+	//   to transmit the disease
 	// var row = table.appendChild(document.createElement('tr'))
 	// var column= row.appendChild(document.createElement('td'));
 	// column.colSpan = 2
@@ -957,15 +1179,14 @@ function main()
 	// info div
 	let msg_div = document.createElement('div')
 	global.ui.msg_div = msg_div
-	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
+	msg_div.style = 'position:absolute; line-height:1.2; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
 	<div style="width:720px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
-	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
+	Inspired by <a target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
 		<center>
-		<a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank"
-		href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
+		<a target="_blank" href="https://www.washingtonpost.com/graphics/2020/world/corona-simulator/">
 		<i>Why outbreaks like coronavirus spread exponentially, <br>and how to "flatten the curve"</i>
 		</a>
 		</center>
@@ -1001,7 +1222,7 @@ function main()
 
 	Note that reducing the contagion probability on interactions can flatten the curve
 	significatively. In other words, any effective protection measure individuals take
-	during interactions can have a big aggregate effect.
+	during interactions can have a big and positive aggregate effect.
 
 	</div> `
 
@@ -1016,6 +1237,9 @@ function main()
 	main_canvas.style='position: relative; left:0px; top:0px; z-index:1;'
 	main_canvas.id = 'main_canvas'
 	main_canvas.tabindex = '1'
+
+
+
 
 	var body = document.getElementsByTagName('body')[0]
 	global.ui.body = body
