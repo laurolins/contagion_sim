@@ -959,7 +959,7 @@ function main()
 	global.ui.msg_div = msg_div
 	msg_div.style = 'position:absolute; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
-	<div style="width:700px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
+	<div style="width:720px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
 	Inspired by <a style="color:#000088; vlink:#000088; alink:#000088; text-decoration:none;" target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
@@ -971,13 +971,13 @@ function main()
 		</center>
 	<br>
 
-	here is a another simulated world where we can control the <b>contagion probability</b> of the 
+	here is another simulated world where we can control the <b>contagion probability</b> of the 
 	interactions between a sick person and a healthy person.
 
 	<br><br>
 
 	<center>
-	What is the effect on <b>flattening the curve</b> when the <br>contagion probability is reduced?
+	What is the effect on flattening the curve when the <br>contagion probability is reduced?
 	</center>
 
 	<br>
@@ -988,8 +988,8 @@ function main()
 	per interaction are 1, 1/2, 1/4 and 1/8. On the rows we vary the recovery time 
 	of a sick individual. The recovery time is defined in terms of the duration in
 	which a moving individual covers a certain distance. On the top row this distance
-	is the diagonal of the panel (longer recovery) and on the bottom row it is the side
-	of the panel (faster recovery). 
+	is the diagonal of the panel (longer recovery) and on the bottom row this distance 
+	is the side of the panel (faster recovery). 
 
 	<br><br>
 
