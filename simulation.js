@@ -1145,9 +1145,9 @@ td, th {
 	pi: pairwise interactions<br>
 	cp: contagion prob./interaction<br>
 	rs: recovery steps<br>
-	h: healthy count<br>
-	r: recovered count<br>
-	s: sick count<br>
+	h: healthy<br>
+	r: recovered<br>
+	s: sick<br>
 	Ms: max sick simultaneously<br>
 	<br>
 	<div style="text-align:center"><a style="width:100%; text-align:center" href="https://github.com/laurolins/contagion_sim" target="_blank">Source Code</a></div>
