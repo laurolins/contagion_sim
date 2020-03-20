@@ -1181,7 +1181,7 @@ td, th {
 	global.ui.msg_div = msg_div
 	msg_div.style = 'position:absolute; line-height:1.2; font-size:20px; width:calc(100% - 225px); left:225px; height:100%; background-color: '+COLOR_INFO_MSG+'; z-index:2; color:#000000; visibility:visible;'
 	msg_div.innerHTML= `
-	<div style="width:720px; margin-left:20px; margin-top:25px; background-color:#ffffff00;" >
+	<div style="width:720px; margin-left:20px; margin-top:15px; background-color:#ffffff00;" >
 	Inspired by <a target="_blank" href="https://twitter.com/Harry_Stevens">Harry Steven's</a>
 	article on 
 	<br> <br>
