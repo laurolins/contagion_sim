@@ -943,7 +943,7 @@ td, th {
 			col.className="table_input";
 			let recovery_steps_input = col.appendChild(document.createElement('input'));
 			recovery_steps_input.type = 'text'
-			recovery_steps_input.value = '1.41 1'
+			recovery_steps_input.value = '2 1'
 			global.ui.recovery_steps_input = recovery_steps_input
 		}
 	}
@@ -1216,7 +1216,7 @@ td, th {
 	per interaction are 1, 1/2, 1/4 and 1/8. On the rows we vary the recovery time 
 	of a sick individual. The recovery time is defined in terms of the duration in
 	which a moving individual covers a certain distance. On the top row this distance
-	is the diagonal of the panel (longer recovery) and on the bottom row this distance 
+	is twice the side of the panel (longer recovery) and on the bottom row this distance 
 	is the side of the panel (faster recovery). 
 
 	<br><br>
