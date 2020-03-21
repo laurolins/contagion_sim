@@ -216,7 +216,7 @@ function simulation_update_interactions(simulation)
 
 }
 
-function simulation_init(population, initially_sick, radius, width, height, contagion_probs, recovery_widths, static_population_ratio)
+function simulation_init(population, initially_sick, radius, width, height, contagion_probs, contagion_probs_raw, recovery_widths, static_population_ratio)
 {
 
 	let steps_to_px = 2
@@ -225,7 +225,6 @@ function simulation_init(population, initially_sick, radius, width, height, cont
 	for (let i=0;i<recovery_widths.length;i++) {
 		rs.push(Math.round((recovery_widths[i] * width)/speed_unit_in_px))
 	}
-
 	let m = contagion_probs.length * recovery_widths.length
 	let sim_area_margin = radius + 4
 	let simulation = {
@@ -244,7 +243,9 @@ function simulation_init(population, initially_sick, radius, width, height, cont
 		subjects: [],
 		m: m,
 		contagion_probs: contagion_probs,
+		contagion_probs_raw: contagion_probs_raw,
 		recovery_steps: rs,
+		recovery_distances: recovery_widths,
 		max_sick: new Array(m).fill(0),
 		done: false,
 		history: [],
@@ -375,14 +376,14 @@ function render_simulation(simulation)
 		let row = Math.floor(i / simulation.contagion_probs.length)
 		let col = i % simulation.contagion_probs.length
 
-		let infection_rate = simulation.contagion_probs[col]
+		let contagion_probs_raw = simulation.contagion_probs_raw[col]
 		let recovery_steps = simulation.recovery_steps[row]
+		let recovery_distance = simulation.recovery_distances[row]
 
 		// x0, y0, width, height
 		let header_view   = [ col * width + hmargin0, row * height + vmargin0, width_header, height_header]
 		let tseries_view  = [ col * width + hmargin0, row * height + vmargin0 + height_header , width_tseries, height_tseries ]
 		let world_view    = [ col * width + hmargin0, row * height + vmargin0 + height_header + height_tseries + vmargin, width_world, height_world]
-
 
 		//-----------------
 		// Time Series
@@ -402,7 +403,7 @@ function render_simulation(simulation)
 		let len = Math.min(max_iter, iterations)
 
 		// for perf. factor the three color bars
-		ctx.font = "9px Monaco";
+		ctx.font = "11px Monaco";
 		ctx.fillStyle = COLOR_HEALTHY
 		for (let j=0;j<len;++j) {
 			// use first and last
@@ -451,11 +452,12 @@ function render_simulation(simulation)
 
 			if (j == len-1) {
 
+
 				let inter = simulation.pairwise_interactions
 
 				// write the number
 				ctx.textAlign="left"
-				let header_text = "it:" + simulation.iteration  + " pi:" + inter + " cp:"+infection_rate+ " rs:" + recovery_steps
+				let header_text = "cp:" + contagion_probs_raw+ " rd:" + recovery_distance + " it:" + simulation.iteration  + " pi:" + inter
 				// + " h:" +data.healthy + " r:" +data.recovered + " s:" +data.sick  + " Ms:" + simulation.max_sick[i]
 				ctx.fillStyle = "black"
 				ctx.fillText(header_text, header_view[0] + 5, header_view[1] + header_view[3]/2 + 4)
@@ -666,18 +668,20 @@ function reset_simulation()
 		alert("Error parsing Panel Size")
 		return
 	}
-	let contagion_probs = global.ui.contagion_probs_input.value.split(" ");
-	for (let i=0;i<contagion_probs.length;i++) {
-		let cp = contagion_probs[i]
+	let contagion_probs_raw = global.ui.contagion_probs_input.value.split(" ");
+	let contagion_probs = []
+	for (let i=0;i<contagion_probs_raw.length;i++) {
+		let cp = contagion_probs_raw[i]
 		let num_den = cp.split('/')
 		if (num_den.length  == 1) {
-			contagion_probs[i] = parseFloat(num_den[0])
+			contagion_probs.push(parseFloat(num_den[0]))
+			// contagion_probs[i] = parseFloat(num_den[0])
 			if (isNaN(contagion_probs[i])) {
 				alert("Error parsing contagion prob. use space to separate probs")
 				return
 			}
 		} else if (num_den.length == 2) {
-			contagion_probs[i] = parseFloat(num_den[0]) / parseFloat(num_den[1])
+			contagion_probs.push(parseFloat(num_den[0]) / parseFloat(num_den[1]))
 			if (isNaN(contagion_probs[i])) {
 				alert("Error parsing contagion prob. use space to separate probs")
 				return
@@ -695,7 +699,7 @@ function reset_simulation()
 	}
 
 	// set global simulation
-	global.simulation = simulation_init(population, initially_sick, radius, panel_size, panel_size, contagion_probs, recovery_steps, social_distancing)
+	global.simulation = simulation_init(population, initially_sick, radius, panel_size, panel_size, contagion_probs, contagion_probs_raw, recovery_steps, social_distancing)
 	global.running = false
 	global.ui.play_input.value = global.running ? 'Pause' : 'Play'
 }
@@ -939,7 +943,7 @@ td, th {
 			col.className="table_input";
 			let recovery_steps_input = col.appendChild(document.createElement('input'));
 			recovery_steps_input.type = 'text'
-			recovery_steps_input.value = '1.4142 1'
+			recovery_steps_input.value = '1.41 1'
 			global.ui.recovery_steps_input = recovery_steps_input
 		}
 	}
@@ -1140,16 +1144,19 @@ td, th {
 	let info_div = controls_div.appendChild(document.createElement('div'))
 	// info_div.style.fontClass="12 Monaco"
 	info_div.style = "padding: 5px; line-height: 1.25;"
-	info_div.innerHTML=`<p>
+	info_div.innerHTML=`<div style='font:12px Monaco,Courier;'>
+	cp: contagion prob. per <br>
+	&nbsp;&nbsp;&nbsp;&nbsp;interaction<br>
+	rd: recovery distance <br>
+	    &nbsp;&nbsp;&nbsp;&nbsp;(x Panel Size)<br>
 	it: iteration<br>
 	pi: pairwise interactions<br>
-	cp: contagion prob./interaction<br>
-	rs: recovery steps<br>
-	h: healthy<br>
-	r: recovered<br>
-	s: sick<br>
+	h:&nbsp; healthy<br>
+	r:&nbsp; recovered<br>
+	s:&nbsp; sick<br>
 	Ms: max sick simultaneously<br>
 	<br>
+	</div>
 	<div style="text-align:center"><a style="width:100%; text-align:center" href="https://github.com/laurolins/contagion_sim" target="_blank">Source Code</a></div>
 	</p>`
 
