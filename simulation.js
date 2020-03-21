@@ -657,7 +657,7 @@ function reset_simulation()
 		return
 	}
 
-	let radius = parseInt(global.ui.radius_input.value)
+	let radius = parseFloat(global.ui.radius_input.value)
 	if (isNaN(radius)) {
 		alert("Error parsing Radius")
 		return
